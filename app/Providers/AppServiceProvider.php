@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL; // 1. Tambahkan ini
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // 2. Tambahkan kode ini agar link otomatis jadi HTTPS di Railway
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
