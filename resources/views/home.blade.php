@@ -10,6 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Draggable.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     {{-- ========== SEMUA CSS DARI HOMESCREEN KAMU (TIDAK BERUBAH) ========== --}}
     <style>
@@ -875,6 +877,302 @@
         }
 
         /* ============================================================
+   LOKASI / MAP SECTION  — FIXED
+   ============================================================ */
+#lokasi {
+    /* padding: 100px 0 0px; */
+    background: linear-gradient(180deg, var(--ocean-dk) 0%, var(--ocean-deep) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+#lokasi .sec-title { color: #fff; }
+#lokasi .sec-title span { color: var(--turq); }
+#lokasi .sec-desc { color: rgba(255,255,255,0.72); }
+
+/* Dot-grid noise */
+#lokasi::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(64,224,208,0.07) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── NEW: outer wrapper handles the glow ring positioning ── */
+.map-outer {
+    position: relative;
+    margin-top: 36px;
+    /* Glow ring needs space to breathe beyond map edge */
+    padding: 30px;
+    margin-left: -30px;
+    margin-right: -30px;
+}
+
+/* Pulsing glow ring — now lives in .map-outer, NOT clipped */
+.map-glow-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 40px;
+    background: radial-gradient(ellipse at 50% 50%,
+        rgba(64,224,208,0.10) 0%,
+        rgba(0,119,190,0.06) 40%,
+        transparent 70%);
+    pointer-events: none;
+    animation: mapGlowPulse 4s ease-in-out infinite alternate;
+    z-index: 0;
+}
+
+@keyframes mapGlowPulse {
+    from { opacity: 0.5; transform: scale(0.97); }
+    to   { opacity: 1;   transform: scale(1.03); }
+}
+
+/* Map card — clips map tiles to rounded corners */
+.map-wrap {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;           /* clips Leaflet tiles cleanly */
+    box-shadow:
+        0 0 0 1px rgba(64,224,208,0.22),
+        0 20px 60px rgba(0,0,0,0.50),
+        0 0 100px rgba(64,224,208,0.10); /* glow on the box itself */
+    z-index: 1;
+}
+
+/* Leaflet map div */
+#leafletMap {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 450px;
+}
+
+/* Override Leaflet container background */
+.leaflet-container {
+    background: #001f3f !important;
+    font-family: var(--fb) !important;
+}
+
+/* Vignette overlay — sits above map, below UI controls */
+.map-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 50%,
+        rgba(0, 31, 63, 0.50) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Leaflet zoom controls */
+.leaflet-control-zoom {
+    border: none !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+}
+
+.leaflet-control-zoom a {
+    background: rgba(0,31,63,0.90) !important;
+    color: var(--turq) !important;
+    border: 1px solid rgba(64,224,208,0.25) !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    line-height: 28px !important;
+    transition: all 0.2s;
+}
+
+.leaflet-control-zoom a:hover {
+    background: var(--ocean) !important;
+    color: #fff !important;
+    border-color: var(--turq) !important;
+}
+
+/* Attribution */
+.leaflet-control-attribution {
+    background: rgba(0,20,50,0.80) !important;
+    color: rgba(255,255,255,0.45) !important;
+    font-size: 0.62rem !important;
+    backdrop-filter: blur(6px);
+}
+
+.leaflet-control-attribution a { color: var(--turq) !important; }
+
+/* Custom popup */
+.leaflet-popup-content-wrapper {
+    background: rgba(0,20,50,0.95) !important;
+    border: 1px solid rgba(64,224,208,0.35) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(64,224,208,0.12) !important;
+    backdrop-filter: blur(14px) !important;
+    padding: 0 !important;
+}
+
+.leaflet-popup-content {
+    margin: 0 !important;
+    padding: 16px 18px !important;
+    font-family: var(--fb) !important;
+    color: rgba(255,255,255,0.92) !important;
+    font-size: 0.85rem !important;
+    line-height: 1.6 !important;
+    min-width: 200px;
+}
+
+.leaflet-popup-tip {
+    background: rgba(0,20,50,0.95) !important;
+}
+
+.leaflet-popup-close-button {
+    color: rgba(64,224,208,0.8) !important;
+    font-size: 1.1rem !important;
+    top: 8px !important;
+    right: 10px !important;
+    padding: 0 !important;
+    transition: color 0.2s;
+}
+
+.leaflet-popup-close-button:hover { color: #fff !important; }
+
+/* Popup inner classes */
+.mp-title {
+    font-family: var(--fd);
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--turq);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mp-sub {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.mp-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--fd);
+    font-weight: 700;
+    font-size: 0.74rem;
+    color: var(--turq);
+    text-decoration: none;
+    border: 1px solid rgba(64,224,208,0.3);
+    padding: 3px 10px;
+    border-radius: 50px;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+.mp-link:hover {
+    background: rgba(64,224,208,0.15);
+    color: #fff;
+}
+
+.mp-tag {
+    display: inline-block;
+    background: rgba(64,224,208,0.12);
+    border: 1px solid rgba(64,224,208,0.28);
+    color: var(--turq);
+    font-family: var(--fd);
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 2px 9px;
+    border-radius: 50px;
+    margin-right: 4px;
+    margin-top: 4px;
+}
+
+/* Info card overlay */
+.map-info-card {
+    position: absolute;
+    bottom: 18px;
+    left: 18px;
+    z-index: 500;
+    background: rgba(0,15,40,0.92);
+    border: 1px solid rgba(64,224,208,0.28);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+    max-width: 260px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.map-info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.55);
+}
+
+.mic-icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+
+.mic-title {
+    font-family: var(--fd);
+    font-weight: 800;
+    font-size: 0.88rem;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.mic-sub {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.50);
+    margin-top: 2px;
+}
+
+.mic-link {
+    display: inline-block;
+    margin-top: 6px;
+    font-family: var(--fd);
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: var(--turq);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.mic-link:hover { color: #fff; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    #leafletMap { height: 400px; }
+}
+
+@media (max-width: 768px) {
+    #leafletMap { height: 320px; }
+    .map-outer { padding: 20px; margin-left: -20px; margin-right: -20px; }
+    .map-info-card {
+        bottom: 10px; left: 10px;
+        max-width: 195px; padding: 10px 12px; gap: 8px;
+    }
+    .mic-icon { font-size: 1.2rem; }
+    .mic-title { font-size: 0.78rem; }
+    .mic-sub { font-size: 0.66rem; }
+}
+
+@media (max-width: 480px) {
+    #leafletMap { height: 270px; }
+    .map-outer { padding: 16px; margin-left: -16px; margin-right: -16px; }
+    .map-info-card { display: none; } /* too cramped on tiny screens */
+}
+
+/* ── Fix #randomizer gradient seam ── */
+/* BEFORE: linear-gradient(180deg, var(--ocean-dk), var(--ocean-deep))  ← jarring jump */
+/* AFTER:  stays at ocean-deep, seamless continuation from #lokasi       */
+
+        /* ============================================================
    WHIRLPOOL RANDOMIZER — CSS SNIPPET
    Tambahkan ke file style.css Anda (misalnya setelah blok #about)
    ============================================================ */
@@ -882,7 +1180,7 @@
         /* ── Section wrapper ─────────────────────────────────── */
         #randomizer {
             padding: 90px 0 0;
-            background: linear-gradient(180deg, var(--ocean-dk), var(--ocean-deep));
+            background: linear-gradient(180deg, var(--ocean-deep) 0%, var(--ocean-deep) 100%);
             position: relative;
             overflow: hidden;
         }
@@ -2182,6 +2480,48 @@
 
 
     <!-- ============================================================
+     LOKASI SEKOLAH — Leaflet Map  [FIXED]
+============================================================ -->
+<section id="lokasi">
+    <div class="sec-inner">
+        <div class="sec-badge">📍 Lokasi Kami</div>
+        <h2 class="sec-title">Temukan <span>Kami</span></h2>
+        <p class="sec-desc">SMKN 1 Padaherang — Jl. Raya Padaherang Km.1, Desa Karangsari, Kab. Pangandaran, Jawa Barat.</p>
+
+        <!-- .map-outer: scroll-reveal wrapper, hosts the glow ring OUTSIDE overflow:hidden -->
+        <div class="map-outer rv">
+
+            <!-- Glow ring — lives here so it's NOT clipped by .map-wrap's overflow:hidden -->
+            <div class="map-glow-ring"></div>
+
+            <!-- .map-wrap: overflow:hidden clips Leaflet tiles to rounded corners -->
+            <div class="map-wrap">
+
+                <!-- Info card overlay (bottom-left) -->
+                <div class="map-info-card">
+                    <div class="mic-icon">🏫</div>
+                    <div class="mic-body">
+                        <div class="mic-title">SMKN 1 Padaherang</div>
+                        <div class="mic-sub">Kab. Pangandaran, Jawa Barat</div>
+                        <!-- FIXED: correct coordinates in Google Maps link -->
+                        <a class="mic-link"
+                           href="https://maps.google.com/?q=-7.5565,108.6945"
+                           target="_blank" rel="noopener">
+                            Buka di Google Maps ↗
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Leaflet map container -->
+                <div id="leafletMap"></div>
+
+            </div><!-- /.map-wrap -->
+        </div><!-- /.map-outer -->
+    </div>
+</section>
+
+
+    <!-- ============================================================
      WHIRLPOOL RANDOMIZER — HTML SNIPPET
      Letakkan section ini SETELAH section #about dan SEBELUM section #gallery
      ============================================================ -->
@@ -2452,7 +2792,7 @@
             {
                 name: 'Bp Patah Yasin',
                 role: 'Wali Kelas',
-                emoji: '<img src="img/STRUKTUR/wali_kelas.png" alt="Foto">'
+                emoji: '<img src="img/STRUKTUR/walikelas.png" alt="Foto">'
             },
             {
                 name: 'Fitria',
@@ -3618,6 +3958,184 @@
             }
         });
     </script>
+
+    <!-- ============================================================
+     LEAFLET MAP — SMKN 1 Padaherang
+    ============================================================ -->
+    <!-- ============================================================
+     LEAFLET MAP — SMKN 1 Padaherang  [FIXED]
+============================================================ -->
+<script>
+(function () {
+    /* ─────────────────────────────────────────────────────────
+       VERIFIED COORDINATES — SMKN 1 Padaherang
+       Source: data.sekolah-kita.net (Kemdikbud official data)
+       Address: Jl. Raya Padaherang Km.1, Desa Karangsari,
+                Kec. Padaherang, Kab. Pangandaran, Jawa Barat
+    ───────────────────────────────────────────────────────── */
+    const LAT  = -7.5565;   // FIXED: was -7.4167 (wrong by ~15 km)
+    const LNG  = 108.6945;  // FIXED: was 108.4833 (wrong by ~23 km)
+    const ZOOM = 16;        // slightly closer for campus-level view
+
+    /* ── School marker icon ── */
+    const schoolIcon = L.divIcon({
+        className: '',
+        html: `
+            <div style="
+                width:46px; height:46px;
+                background: linear-gradient(135deg, #0077be, #40E0D0);
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                box-shadow: 0 4px 20px rgba(0,119,190,0.6),
+                            0 0 0 3px rgba(64,224,208,0.35),
+                            0 0 0 6px rgba(64,224,208,0.12);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <span style="
+                    transform: rotate(45deg);
+                    font-size: 1.3rem;
+                    line-height: 1;
+                    display: block;
+                    margin-top: 2px;
+                ">🏫</span>
+            </div>`,
+        iconSize:    [46, 46],
+        iconAnchor:  [23, 46],
+        popupAnchor: [0, -50],
+    });
+
+    /* ── Class marker icon ── */
+    const classIcon = L.divIcon({
+        className: '',
+        html: `
+            <div style="
+                width:36px; height:36px;
+                background: linear-gradient(135deg, #40E0D0, #2bb8a9);
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                box-shadow: 0 4px 14px rgba(64,224,208,0.55),
+                            0 0 0 2px rgba(64,224,208,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <span style="
+                    transform: rotate(45deg);
+                    font-size: 1rem;
+                    line-height: 1;
+                    display: block;
+                    margin-top: 1px;
+                ">💻</span>
+            </div>`,
+        iconSize:    [36, 36],
+        iconAnchor:  [18, 36],
+        popupAnchor: [0, -40],
+    });
+
+    /* ── Popup HTML builder ── */
+    function buildPopup(icon, title, sub, tags, mapsUrl) {
+        const tagHtml = tags.map(t => `<span class="mp-tag">${t}</span>`).join('');
+        const linkHtml = mapsUrl
+            ? `<br><a class="mp-link" href="${mapsUrl}" target="_blank" rel="noopener">🗺 Buka Google Maps ↗</a>`
+            : '';
+        return `
+            <div class="mp-title">${icon} ${title}</div>
+            <div class="mp-sub">${sub}</div>
+            ${linkHtml}
+            <div style="margin-top:6px">${tagHtml}</div>
+        `;
+    }
+
+    /* ── Init map after DOM is ready ── */
+    document.addEventListener('DOMContentLoaded', function () {
+        const mapEl = document.getElementById('leafletMap');
+        if (!mapEl) return;
+
+        const map = L.map('leafletMap', {
+            center:             [LAT, LNG],
+            zoom:               ZOOM,
+            zoomControl:        true,
+            scrollWheelZoom:    false,  /* prevent accidental scroll hijack */
+            attributionControl: true,
+        });
+
+        /* ── Tile layer — OpenStreetMap ── */
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+        }).addTo(map);
+
+        /* ── SMKN 1 Padaherang main marker ── */
+        const schoolMarker = L.marker([LAT, LNG], { icon: schoolIcon })
+            .addTo(map)
+            .bindPopup(
+                buildPopup(
+                    '🏫',
+                    'SMKN 1 Padaherang',
+                    'Jl. Raya Padaherang Km.1, Desa Karangsari,<br>Kec. Padaherang, Kab. Pangandaran, Jawa Barat',
+                    ['SMK Negeri', 'Padaherang', 'Pangandaran'],
+                    'https://maps.google.com/?q=-7.5565,108.6945'
+                ),
+                { maxWidth: 280, className: '' }
+            );
+
+        /* Open popup after a short delay so tiles load first */
+        setTimeout(() => schoolMarker.openPopup(), 600);
+
+        /* ── X PPLG C class marker (small offset from school) ── */
+        L.marker([LAT - 0.0004, LNG + 0.0007], { icon: classIcon })
+            .addTo(map)
+            .bindPopup(
+                buildPopup(
+                    '💻',
+                    'Kelas X PPLG C',
+                    'Pengembangan Perangkat Lunak dan Gim',
+                    ['PPLG', 'Kelas X', '35 Siswa'],
+                    null
+                ),
+                { maxWidth: 240 }
+            );
+
+        /* ── Campus radius circle ── */
+        L.circle([LAT, LNG], {
+            radius:      100,
+            color:       '#40E0D0',
+            fillColor:   '#0077be',
+            fillOpacity: 0.07,
+            weight:      1.5,
+            dashArray:   '6 5',
+            opacity:     0.5,
+        }).addTo(map);
+
+        /* ── Fade-in when section enters viewport ── */
+        const section = document.getElementById('lokasi');
+        if (section && 'IntersectionObserver' in window) {
+            /* Start invisible and slightly below */
+            mapEl.style.opacity   = '0';
+            mapEl.style.transform = 'translateY(20px)';
+
+            const obs = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    mapEl.style.transition = 'opacity 0.85s ease, transform 0.85s ease';
+                    mapEl.style.opacity    = '1';
+                    mapEl.style.transform  = 'translateY(0)';
+                    /* Tell Leaflet the element is now visible so it renders tiles correctly */
+                    setTimeout(() => map.invalidateSize(), 120);
+                    obs.unobserve(section);
+                });
+            }, { threshold: 0.12 });
+
+            obs.observe(section);
+        } else {
+            /* Fallback for browsers without IntersectionObserver */
+            setTimeout(() => map.invalidateSize(), 400);
+        }
+    });
+})();
+</script>
 </body>
 
 </html>
