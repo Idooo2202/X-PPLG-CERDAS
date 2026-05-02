@@ -489,33 +489,6 @@
             start: '12:45',
             end: '13:30'
         }],
-        6: [{
-            name: 'Sejarah',
-            start: '06:30',
-            end: '08:00'
-        }, {
-            name: 'Seni Budaya',
-            start: '08:00',
-            end: '09:30'
-        }, {
-            name: '☕ Istirahat I',
-            start: '09:30',
-            end: '09:45',
-            isBreak: true
-        }, {
-            name: 'PJOK',
-            start: '09:45',
-            end: '11:15'
-        }, {
-            name: 'PAIBP',
-            start: '11:15',
-            end: '11:45'
-        }, {
-            name: '☕ Istirahat Jum\'at',
-            start: '11:45',
-            end: '13:00',
-            isBreak: true
-        }],
     };
 
     function updateClock() {
