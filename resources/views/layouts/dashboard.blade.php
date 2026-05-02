@@ -7,6 +7,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — X PPLG C</title>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{{ asset('sw.js') }}");
+    }
+</script>
+
     <style>
         /* ============================================================
        CSS TOKENS
