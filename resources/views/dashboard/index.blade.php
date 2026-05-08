@@ -44,9 +44,9 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
-        border-top: 1px solid var(--card-border, rgba(0,119,190,0.08));
-        border-right: 1px solid var(--card-border, rgba(0,119,190,0.08));
-        border-bottom: 1px solid var(--card-border, rgba(0,119,190,0.08));
+        border-top: 1px solid var(--card-border, rgba(0, 119, 190, 0.08));
+        border-right: 1px solid var(--card-border, rgba(0, 119, 190, 0.08));
+        border-bottom: 1px solid var(--card-border, rgba(0, 119, 190, 0.08));
         transition: background 0.4s ease;
     }
 
