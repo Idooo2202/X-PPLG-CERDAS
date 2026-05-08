@@ -1584,7 +1584,7 @@
             'Kustian', 'Livia', 'Meli', 'Mila', 'Nabila',
             'Nayla', 'Rafi', 'Regita', 'Renita', 'Rezza',
             'Rido Ganteng', 'Risha', 'Sri', 'Vina', 'Windi',
-            'Wulan', 'Yunisa', 'Zaskya', 'Zein', 'Keyinaa Cantikk',
+            'Wulan', 'Yunisa', 'Zaskya', 'Zein', 'Keyina',
         ];
 
         const DW_ICONS = ['⛵','🚢','🛥️','🪸','🐡','🦑','🐙','🦀','🐠','🦈'];
