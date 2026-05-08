@@ -463,7 +463,7 @@
             start: '07:15',
             end: '08:45'
         }, {
-            name: 'Bahasa Indonesia',
+            name: 'Informatika',
             start: '08:45',
             end: '09:30'
         }, {
@@ -472,11 +472,11 @@
             end: '09:45',
             isBreak: true
         }, {
-            name: 'Mulok 2',
+            name: 'Informatika',
             start: '09:45',
             end: '11:15'
         }, {
-            name: 'Matematika',
+            name: 'PIPAS',
             start: '11:15',
             end: '12:00'
         }, {
@@ -485,9 +485,13 @@
             end: '12:45',
             isBreak: true
         }, {
-            name: 'Mulok 2',
+            name: 'PIPAS',
             start: '12:45',
             end: '13:30'
+        }, {
+            name: 'Bahasa Indonesia',
+            start: '13:30',
+            end: '15:00'
         }],
     };
 
